@@ -1,0 +1,378 @@
+Great — **Day 15–16: System Design Basics** is *mandatory* for a **Google Senior (L5/L6)** interview.
+I’ll explain **each concept in depth**, with:
+
+* 📌 **What it is**
+* 🧠 **Why it exists**
+* ⚙️ **How it works**
+* 🏗️ **How to implement in a production system**
+* 🧪 **Real-world examples (Google / large-scale systems)**
+* ⚠️ **Trade-offs & interview tips**
+
+---
+
+# 🏗️ DAY 15–16: SYSTEM DESIGN BASICS (IN DEPTH)
+
+---
+
+## 1️⃣ LOAD BALANCERS
+
+---
+
+### 📌 What is a Load Balancer?
+
+A **load balancer (LB)** distributes incoming traffic across multiple backend servers to:
+
+* Improve **availability**
+* Improve **scalability**
+* Prevent **overloading**
+
+---
+
+### 🧠 Why Load Balancers Are Needed
+
+Without LB:
+
+* Single server = SPOF (Single Point of Failure)
+* Limited throughput
+* Poor reliability
+
+With LB:
+
+* Horizontal scaling
+* Fault tolerance
+* Smooth traffic spikes
+
+---
+
+### ⚙️ How Load Balancers Work
+
+```
+Client → Load Balancer → Server Pool
+```
+
+LB decides **which server** gets the request.
+
+---
+
+### 🔁 Load Balancing Algorithms
+
+| Algorithm          | When to Use               |
+| ------------------ | ------------------------- |
+| Round Robin        | Equal servers             |
+| Least Connections  | Long-lived connections    |
+| Weighted RR        | Different server capacity |
+| IP Hash            | Session stickiness        |
+| Consistent Hashing | Cache-heavy systems       |
+
+---
+
+### 🏗️ Production Implementation
+
+#### L4 Load Balancer (Transport Level)
+
+* TCP/UDP
+* Faster, less intelligent
+* Example: **AWS NLB**
+
+#### L7 Load Balancer (Application Level)
+
+* HTTP/HTTPS aware
+* Can route based on URL, headers
+* Example: **Nginx, Envoy, AWS ALB**
+
+---
+
+### 🧪 Example: Google Search Frontend
+
+```
+User → Global DNS → Geo Load Balancer → Regional LB → App Servers
+```
+
+---
+
+### ⚠️ Trade-offs
+
+| Benefit           | Cost                 |
+| ----------------- | -------------------- |
+| High availability | Extra hop latency    |
+| Scalability       | LB itself must be HA |
+
+---
+
+### 🎯 Interview Tip
+
+> “I’d use L7 LB if I need routing or auth, L4 if I need raw performance.”
+
+---
+
+## 2️⃣ CACHING (Redis / Memcached)
+
+---
+
+### 📌 What is Caching?
+
+Caching stores **frequently accessed data** in fast storage to reduce:
+
+* Latency
+* Database load
+* Cost
+
+---
+
+### 🧠 Why Caching?
+
+Database is:
+
+* Slow
+* Expensive
+* Limited in scale
+
+Cache is:
+
+* In-memory
+* Extremely fast
+* Cheap reads
+
+---
+
+### ⚙️ How Caching Works
+
+```
+Client → Cache → DB
+```
+
+---
+
+### 🔁 Cache Access Patterns
+
+| Pattern       | Use Case              |
+| ------------- | --------------------- |
+| Read-Through  | Transparent cache     |
+| Write-Through | Strong consistency    |
+| Write-Behind  | High write throughput |
+| Cache-Aside   | Most common           |
+
+---
+
+### 🏗️ Production Implementation (Cache-Aside)
+
+```text
+1. Read from cache
+2. If miss → read DB
+3. Update cache
+```
+
+---
+
+### 🧪 Redis vs Memcached
+
+| Feature     | Redis   | Memcached      |
+| ----------- | ------- | -------------- |
+| Persistence | Yes     | No             |
+| Data types  | Rich    | Simple         |
+| Replication | Yes     | No             |
+| Use case    | Complex | Simple caching |
+
+---
+
+### ⚠️ Cache Invalidation (HARD PART)
+
+Strategies:
+
+* TTL
+* Write-through
+* Event-based invalidation
+
+---
+
+### 🎯 Interview Tip
+
+> “Cache invalidation and consistency are the hardest problems.”
+
+---
+
+## 3️⃣ SHARDING & PARTITIONING
+
+---
+
+### 📌 What is Sharding?
+
+Splitting large datasets across multiple databases.
+
+---
+
+### 🧠 Why Sharding?
+
+* Single DB hits limits
+* Vertical scaling doesn’t scale infinitely
+
+---
+
+### ⚙️ Sharding Strategies
+
+| Strategy    | Pros        | Cons              |
+| ----------- | ----------- | ----------------- |
+| Range-based | Simple      | Hot shards        |
+| Hash-based  | Uniform     | Hard to rebalance |
+| Geo-based   | Low latency | Complex queries   |
+
+---
+
+### 🏗️ Production Implementation
+
+#### Example: User Table Sharding
+
+```
+shard_id = hash(user_id) % N
+```
+
+---
+
+### 🧪 Google Example
+
+* Spanner uses **automatic sharding**
+* Bigtable uses **tablet splitting**
+
+---
+
+### ⚠️ Problems
+
+* Cross-shard joins
+* Rebalancing
+* Hot keys
+
+---
+
+### 🎯 Interview Tip
+
+> “I’d prefer consistent hashing to minimize reshuffling.”
+
+---
+
+## 4️⃣ CAP THEOREM
+
+---
+
+### 📌 CAP Definition
+
+In distributed systems, you can choose **only 2**:
+
+* **Consistency**
+* **Availability**
+* **Partition Tolerance**
+
+---
+
+### 🧠 Why CAP Exists
+
+Network partitions are unavoidable.
+
+---
+
+### ⚙️ CAP Choices
+
+| Type | Example             |
+| ---- | ------------------- |
+| CP   | HBase, Zookeeper    |
+| AP   | Cassandra, DynamoDB |
+| CA   | Single-node DB      |
+
+---
+
+### 🧪 Real Example
+
+* Payment system → **CP**
+* Social feed → **AP**
+
+---
+
+### 🎯 Interview Tip
+
+> “Partition tolerance is non-negotiable in distributed systems.”
+
+---
+
+## 5️⃣ CONSISTENCY MODELS
+
+---
+
+### 📌 What is Consistency?
+
+Rules governing **what data a read returns** after a write.
+
+---
+
+### 🔁 Types of Consistency
+
+| Model            | Meaning              |
+| ---------------- | -------------------- |
+| Strong           | Read always latest   |
+| Eventual         | Converges eventually |
+| Read-your-writes | Session-based        |
+| Monotonic reads  | No going backward    |
+
+---
+
+### 🏗️ Production Implementation
+
+#### Strong Consistency
+
+* Leader-based replication
+* Synchronous writes
+
+#### Eventual Consistency
+
+* Async replication
+* Conflict resolution
+
+---
+
+### 🧪 Example
+
+* Google Docs → Strong
+* Instagram likes → Eventual
+
+---
+
+### 🎯 Interview Tip
+
+> “Consistency depends on user expectations.”
+
+---
+
+## 6️⃣ PUTTING IT ALL TOGETHER (REAL SYSTEM)
+
+### Example: URL Shortener
+
+```
+User → LB → App Servers
+        ↓
+      Cache (Redis)
+        ↓
+   Sharded DB
+```
+
+* LB distributes traffic
+* Cache handles hot URLs
+* DB is sharded
+* Eventual consistency acceptable
+
+---
+
+# 🎯 WHAT GOOGLE EXPECTS YOU TO SAY
+
+✔ Correct terminology
+✔ Trade-offs clearly
+✔ Real-world examples
+✔ Operational awareness
+
+---
+
+## 🚀 NEXT STEPS
+
+1️⃣ **End-to-end system design mock (Google style)**
+2️⃣ **Design YouTube / Google Drive / WhatsApp**
+3️⃣ **Behavioral + Googleyness**
+4️⃣ **Senior-level system design cheatsheet**
+
+Tell me what you want next 🔥
