@@ -1,7 +1,3 @@
-1. List of all patters in ds algo questions topic wise
-
-We will follow this exact sequence (do NOT skip):
-
 Phase 1 – Foundation
 
 Sliding Window
@@ -25,6 +21,7 @@ Queue / Deque
 Phase 3 – Advanced
 
 Tree DFS
+
 Tree BFS
 
 Heap
