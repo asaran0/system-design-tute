@@ -1,0 +1,354 @@
+Perfect. Let’s go **FAANG-level deep** on **Pattern #1: Sliding Window** — the way Google/Amazon expect you to *recognize, think, and implement* it in interviews.
+
+I’ll structure this exactly for **systematic mastery** 👇
+
+---
+
+# 🔥 PATTERN #1: SLIDING WINDOW (FULL DEPTH)
+
+## 1️⃣ What is Sliding Window (Core Idea)
+
+Sliding Window is an **optimization pattern** used to reduce **O(n²)** brute-force solutions to **O(n)** by:
+
+> Maintaining a *window (subarray / substring)* and moving it **step-by-step** instead of recomputing everything again.
+
+### When brute force looks like:
+
+```text
+for each start:
+    for each end:
+        process subarray(start, end)
+```
+
+Sliding Window converts it to:
+
+```text
+move right pointer →
+adjust window
+if invalid → move left pointer →
+```
+
+---
+
+## 2️⃣ Absolute Recognition Rule (VERY IMPORTANT)
+
+👉 **Ask yourself this FIRST in interview:**
+
+> “Is the problem asking about a **contiguous subarray or substring**?”
+
+If **YES** → Sliding Window is a **top candidate**.
+
+---
+
+## 3️⃣ Types of Sliding Window (CRITICAL CLASSIFICATION)
+
+### 🔹 TYPE 1: Fixed-Size Window
+
+Window size is **constant (k)**
+
+📌 Keywords:
+
+* “subarray of size k”
+* “window of length k”
+* “k consecutive elements”
+
+Examples:
+
+* Max sum subarray of size k
+* Averages of subarrays of size k
+
+---
+
+### 🔹 TYPE 2: Variable-Size Window (MOST IMPORTANT)
+
+Window expands & shrinks dynamically based on a condition.
+
+📌 Keywords:
+
+* “longest”
+* “smallest”
+* “at most / at least”
+* “without repeating”
+* “sum ≥ k”
+* “substring with condition”
+
+---
+
+### 🔹 TYPE 3: Sliding Window + HashMap
+
+Used when **frequency / uniqueness / distinct elements** matter.
+
+📌 Keywords:
+
+* “distinct”
+* “unique”
+* “no repeating characters”
+* “anagram”
+* “frequency”
+
+---
+
+## 4️⃣ Master Mental Model (INTERVIEW GOLD)
+
+### 🎯 Two Pointers
+
+* `left` → shrinks window
+* `right` → expands window
+
+### 🎯 Window State
+
+* sum
+* count
+* frequency map
+* max/min value
+
+### 🎯 Loop Template
+
+```java
+while (right < n) {
+    add nums[right] to window
+
+    while (window is invalid) {
+        remove nums[left] from window
+        left++
+    }
+
+    update answer
+    right++
+}
+```
+
+If you **memorize this**, 80% of sliding window problems are solved.
+
+---
+
+## 5️⃣ Fixed Size Sliding Window – Deep Dive
+
+### 🔹 Problem Type
+
+> Find something **best / worst** among all subarrays of size `k`
+
+### 🧠 Thinking Steps
+
+1. Build first window of size `k`
+2. Slide:
+
+   * Remove left element
+   * Add right element
+3. Update answer
+
+---
+
+### 🟢 MEDIUM #1
+
+**Maximum Sum Subarray of Size K**
+
+**Problem**
+
+> Given an array of integers, find the maximum sum of any contiguous subarray of size `k`.
+
+#### Brute Force
+
+* O(n·k)
+
+#### Sliding Window
+
+* O(n)
+
+```java
+int maxSum = 0, windowSum = 0;
+int left = 0;
+
+for (int right = 0; right < nums.length; right++) {
+    windowSum += nums[right];
+
+    if (right >= k - 1) {
+        maxSum = Math.max(maxSum, windowSum);
+        windowSum -= nums[left];
+        left++;
+    }
+}
+```
+
+---
+
+### 🟢 MEDIUM #2
+
+**Average of Subarrays of Size K**
+
+Same logic → return averages instead of max.
+
+---
+
+### 🔴 HARD #1
+
+**Maximum Average Subarray II (LeetCode 644)**
+(Binary search + sliding window)
+👉 Important for Google (hybrid pattern).
+
+---
+
+## 6️⃣ Variable Size Sliding Window – Deep Dive (MOST ASKED)
+
+### 🔹 Problem Type
+
+> Longest / shortest subarray satisfying a condition
+
+### 🧠 Thinking Steps
+
+1. Expand window (`right`)
+2. Check validity
+3. If invalid → shrink (`left`)
+4. Update answer
+
+---
+
+### 🟢 MEDIUM #3
+
+**Longest Substring Without Repeating Characters**
+
+```java
+Map<Character, Integer> map = new HashMap<>();
+int left = 0, maxLen = 0;
+
+for (int right = 0; right < s.length(); right++) {
+    char c = s.charAt(right);
+
+    if (map.containsKey(c)) {
+        left = Math.max(left, map.get(c) + 1);
+    }
+
+    map.put(c, right);
+    maxLen = Math.max(maxLen, right - left + 1);
+}
+```
+
+📌 **Key Insight**
+
+* Move `left` only forward
+* Never reset window
+
+---
+
+### 🟢 MEDIUM #4
+
+**Minimum Size Subarray Sum ≥ K**
+
+```java
+int left = 0, sum = 0, minLen = Integer.MAX_VALUE;
+
+for (int right = 0; right < nums.length; right++) {
+    sum += nums[right];
+
+    while (sum >= k) {
+        minLen = Math.min(minLen, right - left + 1);
+        sum -= nums[left];
+        left++;
+    }
+}
+```
+
+---
+
+### 🔴 HARD #2
+
+**Longest Substring with At Most K Distinct Characters**
+
+```java
+Map<Character, Integer> freq = new HashMap<>();
+int left = 0, maxLen = 0;
+
+for (int right = 0; right < s.length(); right++) {
+    freq.put(s.charAt(right), freq.getOrDefault(s.charAt(right), 0) + 1);
+
+    while (freq.size() > k) {
+        char l = s.charAt(left);
+        freq.put(l, freq.get(l) - 1);
+        if (freq.get(l) == 0) freq.remove(l);
+        left++;
+    }
+
+    maxLen = Math.max(maxLen, right - left + 1);
+}
+```
+
+---
+
+## 7️⃣ Sliding Window + Frequency (Anagram Type)
+
+### 🟢 MEDIUM #5
+
+**Find All Anagrams in a String**
+
+Key idea:
+
+* Fixed window
+* Compare frequency maps
+
+---
+
+### 🔴 HARD #3
+
+**Minimum Window Substring (VERY IMPORTANT)**
+
+This is the **ultimate sliding window problem**.
+
+> “Smallest window in `s` that contains all chars of `t`”
+
+Appears in:
+
+* Google
+* Amazon
+* Microsoft
+
+(We’ll do a **separate deep session** on this alone.)
+
+---
+
+## 8️⃣ When NOT to Use Sliding Window ❌
+
+* Subsequence (not contiguous)
+* Multiple rearrangements allowed
+* Non-contiguous selection
+  → Use **DP / Greedy / Backtracking**
+
+---
+
+## 9️⃣ Interview Cheat Sheet (MEMORIZE)
+
+| Keyword              | Pattern          |
+| -------------------- | ---------------- |
+| subarray / substring | Sliding Window   |
+| size k               | Fixed window     |
+| longest / shortest   | Variable window  |
+| unique / distinct    | HashMap window   |
+| at most / at least   | Shrink condition |
+
+---
+
+## 10️⃣ Your Practice Set (MANDATORY)
+
+### ✅ Medium (Solve First)
+
+1. Maximum Sum Subarray of Size K
+2. Longest Substring Without Repeating Characters
+3. Minimum Size Subarray Sum
+4. Longest Repeating Character Replacement
+
+### 🔥 Hard (After Mastery)
+
+1. Minimum Window Substring
+2. Subarrays with K Different Integers
+3. Longest Substring with At Most K Distinct Characters
+
+---
+
+## 🚀 Next Steps
+
+If you want, next we can:
+
+* **Pattern #2: Two Pointers**
+* OR solve **Minimum Window Substring** line-by-line
+* OR build a **30-day FAANG DSA plan**
+
+Just tell me 👍
